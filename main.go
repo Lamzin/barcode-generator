@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"image"
+	"os"
+	"os/exec"
 
 	"github.com/boombuler/barcode"
 	"github.com/boombuler/barcode/code128"
@@ -10,8 +12,33 @@ import (
 )
 
 func main() {
+	// if err := os.Mkdir("out", 0666); err != nil {
+	// 	panic(err)
+	// }
+
+	var files []string
 	for i := 1; i < 10; i++ {
-		DrawPNG(fmt.Sprintf("Pallet-%d", i))
+		text := fmt.Sprintf("Pallet-%d", i)
+		DrawPNG(text)
+
+		fileName := fmt.Sprintf("out/%s.png", text)
+		files = append(files, fileName)
+	}
+
+	args := []string{"import", "out/Pallets.pdf"}
+	args = append(args, files...)
+	fmt.Println(args)
+
+	cmd := exec.Command("pdfcpu", args...)
+	err := cmd.Run()
+	if err != nil {
+		panic(err)
+	}
+
+	for _, fileName := range files {
+		if err := os.Remove(fileName); err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -29,7 +56,9 @@ func DrawPNG(text string) {
 	}
 	dc.DrawStringWrapped(text, W/2, P, 0.5, 0, 0, 1.5, gg.AlignCenter)
 	dc.DrawImage(GenerageBarCode(text), 300, 400)
-	dc.SavePNG(fmt.Sprintf("out/%s.png", text))
+	if err := dc.SavePNG(fmt.Sprintf("out/%s.png", text)); err != nil {
+		panic(err)
+	}
 }
 
 func GenerageBarCode(text string) image.Image {
