@@ -5,13 +5,15 @@ import (
 	"image"
 	"image/png"
 	"os"
-	"os/exec"
 
 	"github.com/boombuler/barcode"
 	"github.com/boombuler/barcode/code128"
 	"github.com/fogleman/gg"
 	"github.com/nfnt/resize"
+	pdfcpu "github.com/pdfcpu/pdfcpu/pkg/api"
 )
+
+const N = 1000
 
 func main() {
 	const pdfFileName = "out/Pallets.pdf"
@@ -20,22 +22,25 @@ func main() {
 	os.Remove(pdfFileName)
 
 	var files []string
-	for i := 1; i < 1000; i++ {
+	for i := 1; i <= N; i++ {
+		fmt.Printf("Generating %d/%d barcode\n", i, N)
+
 		text := fmt.Sprintf("Pallet-%d", i)
 		DrawPNG(text)
 
 		fileName := fmt.Sprintf("out/%s.png", text)
-		defer os.Remove(fileName)
+		defer func() {
+			fmt.Println("Removing " + fileName)
+			if err := os.Remove(fileName); err != nil {
+				panic(err)
+			}
+		}()
 
 		files = append(files, fileName)
 	}
 
-	args := []string{"import", "out/Pallets.pdf"}
-	args = append(args, files...)
-
-	cmd := exec.Command("pdfcpu", args...)
-	err := cmd.Run()
-	if err != nil {
+	fmt.Println("Concatenating PNG files. This might take up to few minutes")
+	if err := pdfcpu.ImportImagesFile(files, "out/Pallets.pdf", nil, nil); err != nil {
 		panic(err)
 	}
 }
@@ -54,7 +59,7 @@ func DrawPNG(text string) {
 	dc.DrawImage(ReadHeart(), W-250-10, H-250-10)
 
 	dc.SetRGB(0, 0, 0)
-	if err := dc.LoadFontFace("/Library/Fonts/Arial Unicode.ttf", P); err != nil {
+	if err := dc.LoadFontFace("data/Arial Unicode.ttf", P); err != nil {
 		panic(err)
 	}
 	dc.DrawStringWrapped(text, W/2, P, 0.5, 0, 0, 1.5, gg.AlignCenter)
