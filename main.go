@@ -37,11 +37,16 @@ func main() {
 		}()
 
 		files = append(files, fileName)
+
 	}
 
 	fmt.Println("Concatenating PNG files. This might take up to few minutes")
-	if err := pdfcpu.ImportImagesFile(files, "out/Pallets.pdf", nil, nil); err != nil {
-		panic(err)
+	const batch = 100
+	for i := 0; i < len(files); i += batch {
+		fmt.Printf("Merging %d/%d PNG files\n", i, len(files))
+		if err := pdfcpu.ImportImagesFile(files[i:minInt(i+batch, len(files))], "out/Pallets.pdf", nil, nil); err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -88,4 +93,11 @@ func ReadHeart() image.Image {
 
 	scaled := resize.Resize(250, 0, img, resize.Lanczos3)
 	return scaled
+}
+
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
