@@ -25,7 +25,7 @@ func main() {
 	for i := 1; i <= N; i++ {
 		fmt.Printf("Generating %d/%d barcode\n", i, N)
 
-		text := fmt.Sprintf("Pallet-%d", i)
+		text := fmt.Sprintf("Pallet-M%d", i)
 		DrawPNG(text)
 
 		fileName := fmt.Sprintf("out/%s.png", text)
@@ -44,7 +44,7 @@ func main() {
 	const batch = 100
 	for i := 0; i < len(files); i += batch {
 		fmt.Printf("Merging %d/%d PNG files\n", i, len(files))
-		if err := pdfcpu.ImportImagesFile(files[i:minInt(i+batch, len(files))], "out/Pallets.pdf", nil, nil); err != nil {
+		if err := pdfcpu.ImportImagesFile(files[i:minInt(i+batch, len(files))], "out/MedicinePallets.pdf", nil, nil); err != nil {
 			panic(err)
 		}
 	}
@@ -82,7 +82,7 @@ func GenerageBarCode(text string) image.Image {
 }
 
 func ReadHeart() image.Image {
-	file, err := os.Open("data/pallet.png")
+	file, err := os.Open("data/medicine.png")
 	if err != nil {
 		panic(err)
 	}
